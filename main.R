@@ -10,7 +10,7 @@ ls() ## no objects left in the workspace
 
 # Installing/updating packages the random forest model
 #install.packages("randomForest")
-install.packages("rasterVis")
+#install.packages("rasterVis")
 
 # load librarys
 library(raster)
@@ -33,6 +33,9 @@ load("data/GewataB5.rda")
 load("data/GewataB7.rda")
 load("data/vcfGewata.rda")
 
+
+hist(vcfGewata, main="Frequency per value in vcfGewata", xlab="Value")
+
 # filter out flags for water, cloud or cloud shadow pixels
 vcfGewata[vcfGewata > 100] <- NA
 
@@ -42,6 +45,23 @@ names(alldata) <- c("band1", "band2", "band3", "band4", "band5", "band7", "VCF")
 summary(alldata)
 
 plot(alldata)
+
+# Plotting correlation between VCF and band 1, 2, 3, 4, 5 and 7
+plot(VCF ~ band1, data = df, pch = ".", col = "orange", 
+     main="Correlation between VCF and LandSat bands", 
+     xlab="Electromagnetic Spectrum of the Landsat imagery", ylab="VCF [%]", 
+     xlim=c(0,50000), ylim=c(0,100))
+
+points(VCF ~ band2, data = df, pch = ".", col = "dark green")
+points(VCF ~ band3, data = df, pch = ".", col = "dark blue")
+points(VCF ~ band4, data = df, pch = ".", col = "grey")
+points(VCF ~ band5, data = df, pch = ".", col = "black")
+points(VCF ~ band7, data = df, pch = ".", col = "purple")
+legend(0.37, 100, box.col='white', legend=c("band 1", "band 2", "band 3", "band 4", "band 5", "band 7"),
+       fill=c("dark green", "dark blue", "grey", "black", "purple"), bg="white")
+
+
+
 
 # •produce one or more plots that demonstrate the relationship between...
 # the Landsat bands and the VCF tree cover.
@@ -53,26 +73,8 @@ df <- as.data.frame(getValues(alldata))
 
 head(df)
 
-# # # USING TRAINING DATA?
-load("data/trainingPoly.rda")
-trainingPoly@data$Code <- as.numeric(trainingPoly@data$Class)
-trainingPoly@data
-classes <- rasterize(trainingPoly, vcfGewata, field='Code', progress= "text")
-cols <- c("orange", "dark green", "light blue")
-# plot without a legend
-plot(classes, col=cols, legend=FALSE)
-# add a customized legend
-legend("topright", legend=c("cropland", "forest", "wetland"), fill=cols, bg="white")
-# # #
-
-# Example, but then with 'randomForest'
-model <- randomForest(lc ~ band1 + band2 + band3 + band4 + band5 + band6 + band7, data = calib2)
-# Use the model to predict land cover
-lcMap <- predict(wagLandsatCrop, model = model)
-
-
 model <- lm(VCF ~ band1 + band2 + band3 + band4 + band5 + band7, data = df)
-model
+summary(model)
 # Use the model to predict land cover
 lcMap <- predict(alldata, model = model)
 
@@ -81,6 +83,11 @@ levelplot(lcMap, col.regions = c('green', 'brown', 'darkgreen', 'lightgreen', 'g
 ?lm
 GEWATA.lm <- lm(formula = band4 ~ VCF, data = df)
 GEWATA.lm
+
+
+# voorbeeld om RMSE te berekenen
+RMSE <- sqrt(mean((y-y_pred)^2))
+
 
 summary(GEWATA.lm)$r.sqaured
 

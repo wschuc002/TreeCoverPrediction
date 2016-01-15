@@ -80,6 +80,7 @@ lcMap <- predict(wagLandsatCrop, model = model)
 
 model <- lm(VCF ~ band1 + band2 + band3 + band4 + band5 + band7, data = df)
 model
+summary(model)
 # Use the model to predict land cover
 lcMap <- predict(alldata, model = model)
 

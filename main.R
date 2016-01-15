@@ -10,7 +10,14 @@ ls() ## no objects left in the workspace
 
 # Installing/updating packages the random forest model
 #install.packages("randomForest")
-install.packages("rasterVis")
+#install.packages("rasterVis")
+#install.packages("rgeos", "randomForest")
+
+
+# Document
+#install.packages(c("knitr", "yaml", "htmltools", "caTools", "bitops", "rmarkdown"))
+#install.packages(c("RCurl", "PKI", "packrat", "rstudioapi"))
+
 
 # load librarys
 library(raster)

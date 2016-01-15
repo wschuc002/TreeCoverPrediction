@@ -11,6 +11,12 @@ ls() ## no objects left in the workspace
 # Installing/updating packages the random forest model
 #install.packages("randomForest")
 #install.packages("rasterVis")
+#install.packages("rgeos", "randomForest")
+
+# Document
+#install.packages(c("knitr", "yaml", "htmltools", "caTools", "bitops", "rmarkdown"))
+#install.packages(c("RCurl", "PKI", "packrat", "rstudioapi"))
+
 
 # load librarys
 library(raster)
@@ -19,10 +25,10 @@ library(rgdal)
 library(rgeos)
 
 library(randomForest)
-library(rasterVis)
+library(RColorBrewer)
 
 # referring to functions in R folder
-#source("./R/Preprocessing.R")
+source("./R/RMSE_calculation.R")
 
 # Loading the data into memory (band 6 (thermal infra-red) will be excluded from this exercise)
 load("data/GewataB1.rda")
@@ -46,26 +52,11 @@ summary(alldata)
 
 plot(alldata)
 
-# Plotting correlation between VCF and band 1, 2, 3, 4, 5 and 7
-plot(VCF ~ band1, data = df, pch = ".", col = "orange", 
-     main="Correlation between VCF and LandSat bands", 
-     xlab="Electromagnetic Spectrum of the Landsat imagery", ylab="VCF [%]", 
-     xlim=c(0,50000), ylim=c(0,100))
-
-points(VCF ~ band2, data = df, pch = ".", col = "dark green")
-points(VCF ~ band3, data = df, pch = ".", col = "dark blue")
-points(VCF ~ band4, data = df, pch = ".", col = "grey")
-points(VCF ~ band5, data = df, pch = ".", col = "black")
-points(VCF ~ band7, data = df, pch = ".", col = "purple")
-legend(0.37, 100, box.col='white', legend=c("band 1", "band 2", "band 3", "band 4", "band 5", "band 7"),
-       fill=c("dark green", "dark blue", "grey", "black", "purple"), bg="white")
-
-
-
-
 # •produce one or more plots that demonstrate the relationship between...
 # the Landsat bands and the VCF tree cover.
-pairs(alldata)
+for(i in 1:6){
+  pairs(alldata[[c(i,7)]], maxpixels = 10000)
+}
 # Conclusion: 
 
 ## extract all data to a data.frame
@@ -74,19 +65,53 @@ df <- as.data.frame(getValues(alldata))
 head(df)
 
 model <- lm(VCF ~ band1 + band2 + band3 + band4 + band5 + band7, data = df)
+model
+
 summary(model)
 # Use the model to predict land cover
 lcMap <- predict(alldata, model = model)
 
 levelplot(lcMap, col.regions = c('green', 'brown', 'darkgreen', 'lightgreen', 'grey', 'blue'))
 
-?lm
-GEWATA.lm <- lm(formula = band4 ~ VCF, data = df)
-GEWATA.lm
+
+# Create rasterbrick
+alldata2 <- as.data.frame(alldata, na.rm=T)
+
+model <- lm(VCF ~ band1 + band2 + band3 + band4 + band5 + band7, alldata2, na.action = na.omit)
+summary(model)
+
+# Predicting VCF based on linear regression model
+VCFpredict <- predict(alldata, model = model, na.rm=T)
+names(VCFpredict) <- "VCF"
+VCFpredict[VCFpredict < 0] <- NA
+VCFpredict[VCFpredict > 100] <- NA
+
+# Comparing predicted and original VCF
+colorPal <- rev(colorRampPalette(c("darkgreen","yellow","brown"))(20)) # Create color palette
+plot1 <- spplot(alldata$VCF, main="Original VCF", col.regions = colorPal, 
+              sp.layout = list(list("SpatialPolygonsRescale", layout.north.arrow(), #Create north arrow
+                                  offset=c(850000, 845000), scale=7000, fill=c('white','black')), 
+                             list("SpatialPolygonsRescale", layout.scale.bar(), #Create scale bar
+                                  offset=c(842000, 820000), scale=10000, fill=c('white','black')),
+                             list("sp.text", c(842000, 821500), "0", font=2), #Add text to scale bar
+                             list("sp.text", c(852000, 821500), "10 km", font=2)))
+plot2<-spplot(VCFpredict,main="Predicted VCF", col.regions = colorPal, 
+              sp.layout = list(list("SpatialPolygonsRescale", layout.north.arrow(), 
+                                  offset=c(850000, 845000), scale=7000, fill=c('white','black')), 
+                             list("SpatialPolygonsRescale", layout.scale.bar(),
+                                  offset=c(842000, 820000), scale=10000, fill=c('white','black')),
+                             list("sp.text", c(842000, 821500), "0", font=2),
+                             list("sp.text", c(852000, 821500), "10 km", font=2)))
+print(plot1, position = c(0,0,.5,1),more = T)
+print(plot2, position = c(.5,0,1,1),more = T)
 
 
-# voorbeeld om RMSE te berekenen
-RMSE <- sqrt(mean((y-y_pred)^2))
+
+
+
+RMSE <- RMSE_calculation(alldata$VCF, VCFpredict)
+
+paste("The RMSE is", format(round(RMSEpredict,2), nsmall = 2))
 
 
 summary(GEWATA.lm)$r.sqaured

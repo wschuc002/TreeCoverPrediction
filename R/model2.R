@@ -67,7 +67,27 @@ plot(RMSE)
 
 
 # Create trainingareas of the original and predicted values, and adding their classes.
-training <- mask.trainingdata(rasterbrick$VCF, trainingPoly)
+load("Data/trainingPoly.rda")
+
+mask.trainingdata <- function(x,y){
+  # This function masks out everything except the trainingareas.
+  # x is a VCF raster, y stands for the training areas
+  trainingareas <- mask(x,y)
+  y@data$Code <- as.numeric(y@data$Class) #select the variable code from the trainingareas
+  classes <- rasterize(trainingPoly, x, field = 'Class') #convert the data to a raster
+  names(classes) <- 'Class'
+  trainingclass <- addLayer(trainingareas, classes)
+  
+  return(trainingclass)
+}
+
+
+
+# trainingmask <- mask(rasterbrick$VCF, trainingPoly)
+# trainingPoly@data$code <- as.null(trainngPoly@data@Class)
+# rasterized <- rasterize(trainingPoly, rasterbrick$VCF, )
+
+trainingmask <- mask.trainingdata(rasterbrick$VCF, trainingPoly)
 predictedtraining <- mask.trainingdata(VCFpredict, trainingPoly)
 
 # Calculating RMSE per class

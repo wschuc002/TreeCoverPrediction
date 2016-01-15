@@ -50,10 +50,17 @@ plot2 <- plot(VCFpredict)
 RMSEpredict <- calculate.RMSE(rasterbrick$VCF, VCFpredict)
 
 
-#RMSE <- sqrt(mean((rasterbrick$VCF-VCFpredict)^2))
+#source("./R/RMSE_calculation.R")
+RMSE2 <- myfunction(rasterbrick$VCF, VCFpredict)
+RMSE <- sqrt(mean((rasterbrick$VCF-VCFpredict)^2))
+
+myfunction <- function(x, y){
+  sqrt(mean((x-y)^2))
+}
 
 
 RMSE
+RMSE2
 plot(RMSE)
 
 

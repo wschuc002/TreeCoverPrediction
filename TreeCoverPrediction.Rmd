@@ -1,0 +1,25 @@
+---
+title: "Tree Cover Prediction"
+subtitle: "Geodetic Engineers of Utrecht"
+authors: "Schuch, William & van Berkum, Rik"
+date: "January 16, 2016"
+output: html_document
+---
+
+"Today we learned about how a model object in R can be used to predict raster values. This is a good example of how we can use the strengths of R's statistical packages in a spatial context. Of course, there are many more types of model objects than what is returned by randomForest(). The most basic model object is a product of a linear regression returned by lm().
+
+The VCF Tree Cover product that we used in the random forest classification is a product of a spatial model of tree cover, based on several input data sources. Using Landsat band reflectance from one point in time, how well can we predict tree cover, using the existing VCF product as a response variable?"
+
+Filter out flags for water, cloud or cloud shadow pixels:
+
+```{r}
+vcfGewata[vcfGewata > 100] <- NA
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
